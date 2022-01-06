@@ -1,5 +1,4 @@
-// TODO: write TODOS to know what to do
-// Everything is TODO
+// Absolute survielence over programming languages
 enum Mode 
 {
     Native,
@@ -19,33 +18,44 @@ fn parse(program: &[Token])
 {
     let mut mode = Mode::Native;
     let mut stack = Vec::new();
+    let mut stack_size = 0;
     for token in program
     {
-        match token {
-            Token::Space => {
-                match mode {
-                    Mode::Native => println!("Not implemented"),
-                    Mode::Stack => stack.push(0), 
-                    Mode::Math => println!("Not implemented"),
-                    Mode::Misc => println!("Not implemented")
+        match mode {
+            Mode::Native => {
+                match token {
+                    Token::Enter => mode = Mode::Stack,
+                    Token::Space => mode = Mode::Math,
+                    Token::Tab => mode = Mode::Misc,
                 }
             },
-            Token::Enter => {
-                match mode {
-                    Mode::Native => mode = Mode::Stack, 
-                    Mode::Stack => mode = Mode::Native, 
-                    Mode::Math => println!("Not implemented"),
-                    Mode::Misc => println!("Not implemented")
+            Mode::Stack => {
+                match token {
+                    Token::Enter => mode = Mode::Native,
+                    Token::Space => {
+                        stack_size += 1;
+                        stack.push(0)
+                    },
+                    Token::Tab => {
+                        stack_size -= 1;
+                        drop(stack.pop())
+                    }
                 }
             },
-            Token::Tab => {
-                  match mode {
-                    Mode::Native => println!("Not implemented"), 
-                    Mode::Stack => drop(stack.pop()), 
-                    Mode::Math => println!("Not implemented"),
-                    Mode::Misc => println!("Not implemented")
-                }     
-            } 
+            Mode::Math => {
+                match token {
+                    Token::Space => mode = Mode::Native,
+                    Token::Enter => stack[stack_size - 1] += 1,
+                    Token::Tab => stack[stack_size - 1] -= 1
+                }
+            },
+            Mode::Misc => {
+                match token {
+                    Token::Tab => mode = Mode::Native,
+                    Token::Enter => println!("{}", stack[stack_size -1]),
+                    Token::Space => println!("Loops are not implemented!") 
+                }
+            }
         }
     }
 }
@@ -54,9 +64,17 @@ fn main()
 {
     let program = [
         Token::Enter,
-        Token::Tab,
-        Token::Space,
+            Token::Space,
         Token::Enter,
+        
+        Token::Space,
+            Token::Enter,
+            Token::Enter,
+        Token::Space,
+        
+        Token::Tab,
+            Token::Enter,
+        Token::Tab
     ]; 
     parse(&program);
 }
