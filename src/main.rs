@@ -1,6 +1,8 @@
+// Absolute survielence over programming languages
 use std::path::Path;
 use std::fs;
-// Absolute survielence over programming languages
+use std::env;
+
 enum Mode 
 {
     Native,
@@ -79,20 +81,19 @@ fn parse(program: Vec<Token>)
 
 fn main() 
 {
-    parse(lex("'\"'`'`")) 
+    let mut args = env::args();
+    let filename = args.nth(1).unwrap();
+    if !Path::new(&filename).exists()
+    {
+        println!("File {} not found!", filename);
+        return;
+    }
+    let code = fs::read_to_string(filename)
+        .expect("Error corrupted while reading file");
+
+    parse(
+        lex(&code)
+    )
+
 }
 
-/* 
-mody:
-    Nativni
-    - enter - enter - ukonci
-            - mezera - push
-            - nl - pop
-
-    - mezera - mezera - konec
-             - enter - +
-             - nl - -
-    - tan - tab - konec
-         - mezera - zapne/skonci cyklus
-         - enter - tisk ve stacku
-*/
