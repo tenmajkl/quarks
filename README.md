@@ -1,5 +1,7 @@
-# StackSpace 
+# 🐸 quacks 
 
-Its like whitespace, porth and brainfu\*k in one language cool huh.
+Its like porth and brainfu\*k in one language, but with the best tokens. Cool huh.
 
-**Stack-oriented whitespace**
+**Stack-oriented language with 3 characters**
+
+Errors are still bloat

@@ -1,3 +1,5 @@
+use std::path::Path;
+use std::fs;
 // Absolute survielence over programming languages
 enum Mode 
 {
@@ -6,15 +8,30 @@ enum Mode
     Math,
     Misc
 }
-
+// TODO Better names
 enum Token
 {
-    Space,
-    Enter,
-    Tab
+    Single,
+    Double,
+    Rev
 }
 
-fn parse(program: &[Token])
+fn lex(program: &str) -> Vec<Token>
+{
+    let mut tokens = Vec::new();
+    for character in program.chars()
+    {
+        match character {
+            '\'' => tokens.push(Token::Single),
+            '"' => tokens.push(Token::Double),
+            '`' => tokens.push(Token::Rev),
+            _ => {}
+        }
+    }
+    tokens
+}
+
+fn parse(program: Vec<Token>)
 {
     let mut mode = Mode::Native;
     let mut stack = Vec::new();
@@ -24,19 +41,19 @@ fn parse(program: &[Token])
         match mode {
             Mode::Native => {
                 match token {
-                    Token::Enter => mode = Mode::Stack,
-                    Token::Space => mode = Mode::Math,
-                    Token::Tab => mode = Mode::Misc,
+                    Token::Single => mode = Mode::Stack,
+                    Token::Double => mode = Mode::Math,
+                    Token::Rev => mode = Mode::Misc,
                 }
             },
             Mode::Stack => {
                 match token {
-                    Token::Enter => mode = Mode::Native,
-                    Token::Space => {
+                    Token::Single => mode = Mode::Native,
+                    Token::Double => {
                         stack_size += 1;
                         stack.push(0)
                     },
-                    Token::Tab => {
+                    Token::Rev => {
                         stack_size -= 1;
                         drop(stack.pop())
                     }
@@ -44,16 +61,16 @@ fn parse(program: &[Token])
             },
             Mode::Math => {
                 match token {
-                    Token::Space => mode = Mode::Native,
-                    Token::Enter => stack[stack_size - 1] += 1,
-                    Token::Tab => stack[stack_size - 1] -= 1
+                    Token::Double => mode = Mode::Native,
+                    Token::Single => stack[stack_size - 1] += 1,
+                    Token::Rev => stack[stack_size - 1] -= 1
                 }
             },
             Mode::Misc => {
                 match token {
-                    Token::Tab => mode = Mode::Native,
-                    Token::Enter => println!("{}", stack[stack_size -1]),
-                    Token::Space => println!("Loops are not implemented!") 
+                    Token::Rev => mode = Mode::Native,
+                    Token::Single => println!("{}", stack[stack_size -1]),
+                    Token::Double => println!("Loops are not implemented!") 
                 }
             }
         }
@@ -62,21 +79,7 @@ fn parse(program: &[Token])
 
 fn main() 
 {
-    let program = [
-        Token::Enter,
-            Token::Space,
-        Token::Enter,
-        
-        Token::Space,
-            Token::Enter,
-            Token::Enter,
-        Token::Space,
-        
-        Token::Tab,
-            Token::Enter,
-        Token::Tab
-    ]; 
-    parse(&program);
+    parse(lex("'\"'`'`")) 
 }
 
 /* 
