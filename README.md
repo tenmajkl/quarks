@@ -1,4 +1,4 @@
-# 🐸 quacks 
+# 🐸 quarks 
 
 Its like porth and brainfu\*k in one language, but with the best tokens. Cool huh.
 
