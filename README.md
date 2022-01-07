@@ -24,6 +24,5 @@ You have 4 modes:
     - \` - substracts 1 from top of stack
 - Misc - This mode contains printing and looping
     - \` - goes back to native mode
-    - `'` - prints number on the top of stack
-    - `"` - Starts/stop looping - TODO - no idea how it will work lol
-
+    - `'` - prints number as number on the top of stack
+    - `"` - Starts/stop looping - When there is 0 on the top it stops 

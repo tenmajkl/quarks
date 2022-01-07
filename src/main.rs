@@ -18,6 +18,9 @@ enum Token
     Rev
 }
 
+/**
+ * Executes lexing procedure which converts all valid characters to tokens
+ */
 fn lex(program: &str) -> Vec<Token>
 {
     let mut tokens = Vec::new();
@@ -33,50 +36,111 @@ fn lex(program: &str) -> Vec<Token>
     tokens
 }
 
-fn parse(program: Vec<Token>)
+struct Simulator
 {
-    let mut mode = Mode::Native;
-    let mut stack = Vec::new();
-    let mut stack_size = 0;
-    for token in program
+    mode: Mode,
+    stack: Vec<i32>,
+    stack_size: usize,
+}
+
+impl Simulator
+{
+    pub fn new() -> Simulator
     {
-        match mode {
-            Mode::Native => {
-                match token {
-                    Token::Single => mode = Mode::Stack,
-                    Token::Double => mode = Mode::Math,
-                    Token::Rev => mode = Mode::Misc,
-                }
-            },
-            Mode::Stack => {
-                match token {
-                    Token::Single => mode = Mode::Native,
-                    Token::Double => {
-                        stack_size += 1;
-                        stack.push(0)
-                    },
-                    Token::Rev => {
-                        stack_size -= 1;
-                        drop(stack.pop())
+        Simulator {
+            mode: Mode::Native,
+            stack: Vec::new(),
+            stack_size: 0,
+        }
+    }
+   
+    /**
+     * Parses all given tokens and runs whole procedure 
+     */
+    fn parse(&mut self, program: &Vec<Token>)
+    {
+        let mut parsing_loop = false;
+        let mut loop_tokens:Vec<Token> = Vec::new();
+        for token in program
+        {
+
+            if parsing_loop
+            {
+                // its stupid i know but i didnt found better way to get the value from reference
+                loop_tokens.push(match token {
+                    &Token::Single => Token::Single,
+                    &Token::Double => Token::Double,
+                    &Token::Rev => Token::Rev,
+                });
+            }
+
+            match self.mode {
+                Mode::Native => {
+                    self.mode = match token {
+                        Token::Single => Mode::Stack,
+                        Token::Double =>Mode::Math,
+                        Token::Rev => Mode::Misc,
                     }
-                }
-            },
-            Mode::Math => {
-                match token {
-                    Token::Double => mode = Mode::Native,
-                    Token::Single => stack[stack_size - 1] += 1,
-                    Token::Rev => stack[stack_size - 1] -= 1
-                }
-            },
-            Mode::Misc => {
-                match token {
-                    Token::Rev => mode = Mode::Native,
-                    Token::Single => println!("{}", stack[stack_size -1]),
-                    Token::Double => println!("Loops are not implemented!") 
+                },
+                Mode::Stack => {
+                    match token {
+                        Token::Single => self.mode = Mode::Native,
+                        Token::Double => {
+                            if parsing_loop { continue; }
+                            self.stack_size += 1;
+                            self.stack.push(0)
+                        },
+                        Token::Rev => {
+                            if parsing_loop { continue; }
+                            self.stack_size -= 1;
+                            drop(self.stack.pop())
+                        }
+                    }
+                },
+                Mode::Math => {
+                    match token {
+                        Token::Double => self.mode = Mode::Native,
+                        Token::Single => {
+                            if parsing_loop { continue; }
+                            self.stack[self.stack_size - 1] += 1
+                        },
+                        Token::Rev => { 
+                            if parsing_loop { continue; }
+                            self.stack[self.stack_size - 1] -= 1 
+                        }
+                    }
+                },
+                Mode::Misc => {
+                    match token {
+                        Token::Rev => self.mode = Mode::Native,
+                        Token::Single => { 
+                            if parsing_loop { continue; }
+                            println!("{}", self.stack[self.stack_size -1])
+                        },
+                        Token::Double => {
+
+                            if parsing_loop
+                            {
+                                while self.stack[self.stack_size - 1 ] != 0
+                                {
+                                    self.parse(&loop_tokens);
+                                }
+                                continue;
+                            }
+
+                            parsing_loop = true;
+                        }
+                    }
                 }
             }
         }
     }
+
+    pub fn simulate(&mut self, program: Vec<Token>)
+    {
+        self.parse(&program)
+    }
+
 }
 
 fn main() 
@@ -91,9 +155,8 @@ fn main()
     let code = fs::read_to_string(filename)
         .expect("Error corrupted while reading file");
 
-    parse(
-        lex(&code)
-    )
+    let mut simulator = Simulator::new();
+    simulator.simulate(lex(&code));
 
 }
 
